@@ -1,35 +1,38 @@
 {% extends 'patients/base.html' %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Patient Records</h3>
-    <a href="{% url 'patient_create' %}" class="btn btn-primary">+ Add New Patient</a>
+    <h3 class="fw-bold">📁 Patients Records List</h3>
+    <a href="{% url 'upload_doc' %}" class="btn btn-primary fw-bold">+ Upload Another Document</a>
 </div>
 
-<table class="table table-bordered table-striped bg-white shadow-sm">
+<table class="table table-bordered table-striped bg-white shadow-sm align-middle">
     <thead class="table-dark">
         <tr>
             <th>Name</th>
             <th>Age</th>
             <th>Gender</th>
             <th>Phone</th>
-            <th>Actions</th>
+            <th class="text-center">Action Options</th>
         </tr>
     </thead>
     <tbody>
         {% for patient in patients %}
         <tr>
-            <td>{{ patient.name }}</td>
+            <td class="fw-bold">{{ patient.name }}</td>
             <td>{{ patient.age }}</td>
             <td>{{ patient.gender }}</td>
             <td>{{ patient.phone }}</td>
-            <td>
-                <a href="{% url 'patient_edit' patient.id %}" class="btn btn-sm btn-warning">Edit & Sign</a>
-                <a href="{% url 'patient_print' patient.id %}" class="btn btn-sm btn-info text-white">Print / PDF</a>
+            <td class="text-center">
+                <!-- Direct Edit/Sign -->
+                <a href="{% url 'patient_edit' patient.id %}" class="btn btn-sm btn-warning fw-bold me-1">✏️ Edit / Sign</a>
+                
+                <!-- Print & PDF Download -->
+                <a href="{% url 'patient_print' patient.id %}" class="btn btn-sm btn-success fw-bold">🖨️ Print & Download PDF</a>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="5" class="text-center">No patients found. Please add a patient.</td>
+            <td colspan="5" class="text-center py-4 text-muted">No patients added yet. Upload a document to add.</td>
         </tr>
         {% endfor %}
     </tbody>

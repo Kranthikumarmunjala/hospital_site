@@ -1,58 +1,91 @@
 {% extends 'patients/base.html' %}
 {% block content %}
-<div class="card shadow p-4">
-    <h3 class="text-warning mb-3">Edit Patient & Digital Signature</h3>
-    
+<div class="card shadow p-4 border-0 mb-5" style="max-width: 750px; margin: 0 auto;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold text-dark">📋 Patient Details Form</h3>
+        <!-- Edit బటన్ నొక్కితే ఫారమ్ అన్-లాక్ అవుతుంది & Sign బాక్స్ వస్తుంది -->
+        <button type="button" class="btn btn-warning fw-bold" id="enableEditBtn" onclick="enableEditing()">✏️ Click to Edit & Sign</button>
+    </div>
+    <hr>
+
     <form method="POST" id="editForm">
         {% csrf_token %}
-        {{ form.as_p }}
-
-        <label class="form-label"><strong>Patient Signature (ల్యాప్‌టాప్‌లో మౌస్ తో / మొబైల్‌లో చేతితో గీయండి):</strong></label>
-        <div style="border: 2px dashed #0d6efd; background-color: #fff; width: 100%; max-width: 400px; height: 180px; position: relative;">
-            <canvas id="signature-pad" style="width: 100%; height: 100%; touch-action: none;"></canvas>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Patient Name:</label>
+                <input type="text" name="name" class="form-control editable-field" value="{{ patient.name }}" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Age:</label>
+                <input type="text" name="age" class="form-control editable-field" value="{{ patient.age }}" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Gender:</label>
+                <input type="text" name="gender" class="form-control editable-field" value="{{ patient.gender }}" readonly>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Phone Number:</label>
+                <input type="text" name="phone" class="form-control editable-field" value="{{ patient.phone }}" readonly>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Address:</label>
+                <input type="text" name="address" class="form-control editable-field" value="{{ patient.address }}" readonly>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-bold">Symptoms / Problem:</label>
+                <textarea name="diagnosis" class="form-control editable-field" rows="3" readonly>{{ patient.diagnosis }}</textarea>
+            </div>
         </div>
-        
-        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearBtn">Clear Signature</button>
-        <input type="hidden" name="signature_data" id="signature_data">
 
-        {% if patient.signature_data %}
-        <div class="mt-3">
-            <p class="mb-1 text-muted">ప్రస్తుతం ఉన్న సంతకం:</p>
-            <img src="{{ patient.signature_data }}" style="border: 1px solid #ccc; max-width: 200px; height: 80px;" alt="Signature">
+        <!-- Signature Box (Edit క్లిక్ చేస్తే మాత్రమే కనిపిస్తుంది) -->
+        <div id="signatureSection" style="display: none;" class="mt-4 p-3 bg-light rounded border">
+            <label class="form-label fw-bold text-danger">✍️ Patient Signature (మొబైల్ లో వేలితో / ల్యాప్‌టాప్‌లో మౌస్ తో సంతకం చేయండి):</label>
+            <div style="border: 2px dashed #0d6efd; background-color: #fff; width: 100%; max-width: 450px; height: 180px;">
+                <canvas id="signature-pad" style="width: 100%; height: 100%; touch-action: none;"></canvas>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearBtn">Clear Signature</button>
+            <input type="hidden" name="signature_data" id="signature_data">
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success btn-lg fw-bold px-4">💾 Save & Add to Patient List</button>
+                <a href="{% url 'patient_list' %}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+            </div>
         </div>
-        {% endif %}
-
-        <hr>
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <a href="{% url 'patient_list' %}" class="btn btn-secondary">Back to List</a>
     </form>
 </div>
 
-<!-- Signature Pad Script -->
+<!-- Signature Pad Script & Edit Toggle -->
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
-    const canvas = document.getElementById('signature-pad');
-    
-    function resizeCanvas() {
+    let signaturePad;
+
+    function enableEditing() {
+        // ఫీల్డ్స్ అన్నీ ఎడిట్ చేయడానికి readonly తీసేస్తాం
+        document.querySelectorAll('.editable-field').forEach(field => field.removeAttribute('readonly'));
+        
+        // సిగ్నేచర్ బాక్స్ ని చూపిస్తాం
+        document.getElementById('signatureSection').style.display = 'block';
+        document.getElementById('enableEditBtn').style.display = 'none';
+
+        // క్యాన్వాస్ రీసైజ్ & సిగ్నేచర్ పాడ్ ఆక్టివేట్
+        const canvas = document.getElementById('signature-pad');
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = canvas.offsetHeight * ratio;
         canvas.getContext("2d").scale(ratio, ratio);
+
+        signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgba(255, 255, 255, 0)',
+            penColor: 'rgb(0, 0, 0)'
+        });
     }
-    window.onresize = resizeCanvas;
-    resizeCanvas();
 
-    const signaturePad = new SignaturePad(canvas, {
-        backgroundColor: 'rgba(255, 255, 255, 0)',
-        penColor: 'rgb(0, 0, 0)'
-    });
-
-    document.getElementById('clearBtn').addEventListener('click', function () {
-        signaturePad.clear();
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        if (signaturePad) signaturePad.clear();
     });
 
     document.getElementById('editForm').addEventListener('submit', function (e) {
-        if (!signaturePad.isEmpty()) {
+        if (signaturePad && !signaturePad.isEmpty()) {
             document.getElementById('signature_data').value = signaturePad.toDataURL();
         }
     });
