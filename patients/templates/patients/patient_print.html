@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patient Medical Slip - {{ patient.name }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- PDF Library CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body { 
+            background: #f8f9fa; 
+            padding: 20px; 
+        }
+        .medical-card {
+            background: #ffffff;
+            border: 2px solid #000;
+            padding: 35px;
+            border-radius: 6px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        /* ప్రింట్ చేసేటప్పుడు బటన్లు ప్రింట్‌లోకి రాకుండా దాచడానికి */
+        @media print {
+            .no-print { 
+                display: none !important; 
+            }
+            body { 
+                padding: 0; 
+                background: #fff; 
+            }
+            .medical-card { 
+                border: 2px solid #000; 
+                box-shadow: none; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Action Buttons (Print & Download) -->
+    <div class="container text-center mb-4 no-print" style="max-width: 720px;">
+        <div class="d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded border">
+            <!-- 1. Direct PDF Download Button -->
+            <button id="downloadPdfBtn" class="btn btn-success fw-bold">
+                📥 Download PDF
+            </button>
+
+            <!-- 2. Print Button -->
+            <button onclick="window.print()" class="btn btn-primary fw-bold">
+                🖨️ Print Document
+            </button>
+
+            <!-- Back Button -->
+            <a href="{% url 'patient_list' %}" class="btn btn-secondary">
+                Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Printable & Downloadable Content Area -->
+    <div id="printArea" class="medical-card">
+        <h2 class="text-center text-uppercase fw-bold mb-3">Patient Medical Form</h2>
+        <hr style="border: 1px solid #000;">
+
+        <div class="row my-2">
+            <div class="col-7"><strong>Patient Name:</strong> {{ patient.name }}</div>
+            <div class="col-5"><strong>Date:</strong> {{ patient.created_at|date:"d-M-Y" }}</div>
+        </div>
+
+        <div class="row my-2">
+            <div class="col-7"><strong>Age:</strong> {{ patient.age }} Years</div>
+            <div class="col-5"><strong>Gender:</strong> {{ patient.gender }}</div>
+        </div>
+
+        <div class="row my-2">
+            <div class="col-12"><strong>Contact Number:</strong> {{ patient.phone }}</div>
+        </div>
+
+        <div class="row my-2">
+            <div class="col-12"><strong>Address:</strong> {{ patient.address }}</div>
+        </div>
+
+        <div class="row my-3">
+            <div class="col-12"><strong>Symptoms / Diagnosis:</strong> {{ patient.symptoms }}</div>
+        </div>
+
+        <!-- Signature Section -->
+        <div class="row mt-5 pt-4">
+            <div class="col-6"></div>
+            <div class="col-6 text-end">
+                <p class="mb-1 fw-bold">Patient Signature:</p>
+                {% if patient.signature_data %}
+                    <img src="{{ patient.signature_data }}" style="width: 160px; height: 60px; border-bottom: 2px solid #000;" alt="Signature">
+                {% else %}
+                    <span class="text-danger">No signature recorded</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for PDF Download -->
+    <script>
+        document.getElementById('downloadPdfBtn').addEventListener('click', function () {
+            const element = document.getElementById('printArea');
+            
+            const opt = {
+                margin:       10,
+                filename:     '{{ patient.name }}_medical_form.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // PDF డౌన్‌లోడ్ అవుతుంది
+            html2pdf().set(opt).from(element).save();
+        });
+    </script>
+</body>
+</html>
